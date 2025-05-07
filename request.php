@@ -93,7 +93,9 @@
   </div>
   
   <div class="position-relative ">
-  <a class="request1" href="welcome.php">DASHBOARD</a>
+  <a class="request1" href="welcome.php">DASHBOARD
+    
+  </a>
     <a class="logout" href="logout.php">LOGOUT</a>
   </div>
 
