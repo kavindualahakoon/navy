@@ -5,6 +5,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Submit Request</title>
+  <link rel="stylesheet" href="main.css">
   <link rel="icon" href="navylogo.png" type="image/png">
   <style>
     body {
@@ -60,6 +61,7 @@
       color: green;
       font-weight: bold;
     }
+
   </style>
 </head>
 <body>
@@ -89,8 +91,11 @@
   </div>
 
   </div>
-<a class="logout" href="logout.php">LOGOUT</a>
-
+  
+  <div class="position-relative ">
+  <a class="request1" href="welcome.php">DASHBOARD</a>
+    <a class="logout" href="logout.php">LOGOUT</a>
+  </div>
 
 
 

@@ -75,22 +75,7 @@ h2 {
   color: #333;
 }
 
-a.logout {
 
-  display: inline-block;
-  margin-top: 20px;
-  text-decoration: none;
-  background: #dc3545;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
-  width:fit-content;
-  height:fit-content;
-}
-
-a.logout:hover {
-  background: #c82333;
-}
 
 .gif-container {
   margin-bottom:auto;
@@ -267,18 +252,7 @@ tr:nth-child(even) {
   background-color: #f2f2f2;
 }
 
-.logout {
-  
-  text-decoration: none;
-  background: #dc3545;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
-}
 
-.logout:hover {
-  background: #c82333;
-}
 
 .home{ 
   text-decoration: none;
@@ -324,3 +298,36 @@ tr:nth-child(even) {
   color: white;
 }
 
+a.logout {
+
+  display: inline-block;
+  margin-top: 20px;
+  text-decoration: none;
+  background: #dc3545;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  width:fit-content;
+  height:fit-content;
+}
+
+a.logout:hover {
+  background: #c82333;
+}
+
+.request {
+  
+  display: inline-block;
+  margin-top: 20px;
+  text-decoration: none;
+  background: rgb(38, 0, 255);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  width:fit-content;
+  height:fit-content;
+}
+
+.request:hover {
+  background: rgb(30, 56, 128)uh;
+}
