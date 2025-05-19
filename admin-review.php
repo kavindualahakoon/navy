@@ -1,205 +1,179 @@
+
 <?php
 session_start();
 include 'connection.php';
 
-if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['username']) || !in_array($_SESSION['role'], ['sysadmin', 'admin', 'admin1', 'admin2', 'admin3', 'admin4'])) {
     header("Location: login.php");
     exit();
 }
 
-function getNextAdmin($currentAdmin) {
-    $adminSequence = ['admin1', 'admin2', 'admin3'];
-    $index = array_search($currentAdmin, $adminSequence);
-    return ($index !== false && $index < count($adminSequence) - 1) ? $adminSequence[$index + 1] : null;
+$username = $_SESSION['username'];
+$adminLevel = $_SESSION['role'];
+
+// Determine which requests to show
+switch ($adminLevel) {
+    case 'admin1':
+        $whereStatus = "r.status = 'pending'";
+        break;
+    case 'admin2':
+        $whereStatus = "r.status = 'admin1_approved'";
+        break;
+    case 'admin3':
+        $whereStatus = "r.status = 'admin2_approved'";
+        break;
+        case 'admin4':
+            $whereStatus = "r.status = 'admin3_approved'";
+            break;
+    default:
+        echo "Unauthorized admin level.";
+        exit();
 }
+
+// Fetch requests with requester info
+$query = "
+    SELECT r.*, u.username AS requester_name, u.profile_photo AS requester_photo
+    FROM user_requests r
+    JOIN users u ON r.user_id = u.id
+    WHERE $whereStatus
+";
+$result = mysqli_query($conn, $query);
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Review</title>
-  <link rel="stylesheet" href="main.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: url('gif/blue.gif') no-repeat center center fixed;
-      background-size: cover;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-      width: 95%;
-      max-width: 1000px;
-    }
-    h2 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #ccc;
-      vertical-align: top;
-    }
-    th {
-      background-color: #5c67f2;
-      color: white;
-    }
-    textarea {
-      width: 100%;
-      height: 60px;
-      resize: none;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 8px;
-      font-size: 14px;
-    }
-    input[type="submit"] {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 5px;
-      background-color: #5c67f2;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-      margin-right: 5px;
-    }
-    input[type="submit"]:hover {
-      background-color: #4a54e1;
-    }
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-    }
-  </style>
-  <script>
-    function validateForm(form) {
-      const remark = form.querySelector("textarea").value.trim();
-      if (remark === "") {
-        alert("Please enter a remark.");
-        return false;
-      }
-      return true;
-    }
-  </script>
+    <meta charset="UTF-8">
+    <title>Admin Review</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('gif/blue.gif') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .custom-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            margin-top: 60px;
+        }
+        textarea {
+            resize: none;
+            min-height: 60px;
+        }
+        .position-absolute {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+        }
+        .position-absolute a {
+            margin-right: 10px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        function validateForm(form) {
+            const remark = form.querySelector("textarea").value.trim();
+            if (remark === "") {
+                alert("Please enter a remark.");
+                return false;
+            }
+            return true;
+        }
+    </script>
 </head>
 <body>
 
-<div class="container">
-  <h2>Pending Requests Assigned to You</h2>
-  <table>
-    <tr>
-      <th>ID</th>
-      <th>Title</th>
-      <th>Details</th>
-      <th>Remark</th>
-      <th>Action</th>
-    </tr>
+<div class="container custom-container">
+    <h2 class="text-center mb-4"><?= htmlspecialchars($username); ?> Review Panel</h2>
 
-    <?php
-    $currentAdmin = $_SESSION['username'];
-    $query = "SELECT * FROM user_requests WHERE status = 'pending' AND assigned_to = ?";
-    $stmt = mysqli_prepare($conn, $query);
-
-    if ($stmt) {
-        mysqli_stmt_bind_param($stmt, "s", $currentAdmin);
-        if (mysqli_stmt_execute($stmt)) {
-            $result = mysqli_stmt_get_result($stmt);
-
-            while ($row = mysqli_fetch_assoc($result)) {
-                ?>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-primary">
                 <tr>
-                  <td><?= $row['id'] ?></td>
-                  <td><?= htmlspecialchars($row['title']) ?></td>
-                  <td><?= htmlspecialchars($row['details']) ?></td>
-                  <td>
-                    <form method="POST" onsubmit="return validateForm(this);">
-                      <textarea name="remark" required></textarea>
-                      <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                  </td>
-                  <td class="action-buttons">
-                      <input type="submit" name="approve" value="Approve">
-                      <input type="submit" name="reject" value="Reject">
-                    </form>
-                  </td>
+                    <th>Profile Photo</th>
+                    <th>Requester Name</th>
+                    <th>Title</th>
+                    <th>Details</th>
+                    <th>Remark</th>
+                    <th>Action</th>
                 </tr>
-                <?php
-            }
-        } else {
-            echo "<tr><td colspan='5'>Failed to execute query: " . mysqli_error($conn) . "</td></tr>";
-        }
-    } else {
-        echo "<tr><td colspan='5'>Failed to prepare query: " . mysqli_error($conn) . "</td></tr>";
-    }
-    ?>
-  </table>
+            </thead>
+            <tbody>
+                <?php while ($row = mysqli_fetch_assoc($result)) { ?>
+                <tr>
+                    <td>
+                        <img src="<?= htmlspecialchars(!empty($row['requester_photo']) ? $row['requester_photo'] : 'uploads/profile_photos/default.png'); ?>" 
+                             alt="Profile Photo" width="40" height="40" class="rounded-circle border">
+                    </td>
+                    <td><?= htmlspecialchars($row['requester_name']); ?></td>
+                    <td><?= htmlspecialchars($row['title']); ?></td>
+                    <td><?= htmlspecialchars($row['details']); ?></td>
+                    <td>
+                        <form method="POST" onsubmit="return validateForm(this);">
+                            <textarea name="remark" class="form-control mb-2" required></textarea>
+                            <input type="hidden" name="id" value="<?= $row['id']; ?>">
+                    </td>
+                    <td>
+                            <button type="submit" name="approve" class="btn btn-success btn-sm mb-1">Approve</button>
+                            <button type="submit" name="reject" class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
 
-  <?php
-  if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-      $id = $_POST['id'];
-      $remark = trim($_POST['remark']);
-      $currentAdmin = $_SESSION['username'];
-
-      if ($remark === '') {
-          echo "<script>alert('Remark is required');</script>";
-      } else {
-          if (isset($_POST['approve'])) {
-              $nextAdmin = getNextAdmin($currentAdmin);
-              if ($nextAdmin) {
-                  $sql = "UPDATE user_requests 
-                          SET admin_remark = CONCAT(IFNULL(admin_remark,''), '[$currentAdmin APPROVED]: ', ?, '\n'),
-                              assigned_to = ?
-                          WHERE id = ?";
-                  $stmt = mysqli_prepare($conn, $sql);
-                  mysqli_stmt_bind_param($stmt, "ssi", $remark, $nextAdmin, $id);
-              } else {
-                  $sql = "UPDATE user_requests 
-                          SET status = 'approved',
-                              admin_remark = CONCAT(IFNULL(admin_remark,''), '[$currentAdmin APPROVED]: ', ?, '\n')
-                          WHERE id = ?";
-                  $stmt = mysqli_prepare($conn, $sql);
-                  mysqli_stmt_bind_param($stmt, "si", $remark, $id);
-              }
-          } elseif (isset($_POST['reject'])) {
-              $sql = "UPDATE user_requests 
-                      SET status = 'rejected',
-                          admin_remark = CONCAT(IFNULL(admin_remark,''), '[$currentAdmin REJECTED]: ', ?, '\n')
-                      WHERE id = ?";
-              $stmt = mysqli_prepare($conn, $sql);
-              mysqli_stmt_bind_param($stmt, "si", $remark, $id);
-          }
-
-          if ($stmt && mysqli_stmt_execute($stmt)) {
-              echo "<script>alert('Action taken successfully'); window.location.href = 'admin-review.php';</script>";
-          } else {
-              echo "<script>alert('Database update failed.');</script>";
-          }
-      }
-  }
-  ?>
+    <div class="d-flex justify-content-between mt-4">
+        <a href="request-status.php" class="btn btn-secondary px-4">Request Status</a>
+        <a href="welcome.php" class="btn btn-warning px-4">Back to Dashboard</a>
+        <a href="logout.php" class="btn btn-danger px-4">Logout</a>
+    </div>
 </div>
 
-<a class="logout" href="logout.php">LOGOUT</a>
-<a class="request" href="request-status.php">REQUEST STATUS</a>
+<?php
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $id = intval($_POST['id']);
+    $remark = trim($_POST['remark']);
+
+    if ($remark === '') {
+        echo "<script>alert('Remark is required');</script>";
+    } else {
+        switch ($adminLevel) {
+            case 'admin1':
+                $remarkField = 'admin1_remark';
+                $nextStatus = 'admin1_approved';
+                break;
+            case 'admin2':
+                $remarkField = 'admin2_remark';
+                $nextStatus = 'admin2_approved';
+                break;
+            case 'admin3':
+                $remarkField = 'admin3_remark';
+                $nextStatus = 'admin3_approved';
+                break;
+            case 'admin4':
+                $remarkField = 'admin4_remark';
+                $nextStatus = 'approved';
+                break;
+        }
+
+        $statusUpdate = isset($_POST['approve']) ? $nextStatus : 'rejected';
+
+        $sql = "UPDATE user_requests SET $remarkField = ?, status = ? WHERE id = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "ssi", $remark, $statusUpdate, $id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+
+        echo "<script>alert('Action completed successfully'); window.location.href = 'admin-review.php';</script>";
+    }
+}
+?>
 
 </body>
 </html>

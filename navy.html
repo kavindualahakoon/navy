@@ -1,0 +1,29 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Request Approval System</title>
+</head>
+<body>
+
+<h1>Submit a Request</h1>
+<form method="POST">
+    <input type="hidden" name="user_id" value="1"> <!-- Assuming user_id 1 submits -->
+    <textarea name="description" placeholder="Describe your request here"></textarea><br>
+    <button type="submit" name="submit_request">Submit Request</button>
+</form>
+
+<h1>Approve or Reject Request</h1>
+<form method="POST">
+    <input type="hidden" name="approval_id" value="1"> <!-- Example approval ID -->
+    <select name="status">
+        <option value="approved">Approve</option>
+        <option value="rejected">Reject</option>
+    </select><br>
+    <textarea name="remarks" placeholder="Add remarks here"></textarea><br>
+    <button type="submit" name="approve_request">Submit Approval</button>
+</form>
+
+</body>
+</html>

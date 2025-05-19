@@ -3,8 +3,8 @@
 <?php
 $host = "localhost";
 $dbname = "user_auth";
-$username = "root"; // default in AMPPS
-$password = "mysql"; // default in AMPPS
+$username = "root"; 
+$password = "mysql"; 
 
 try {
     $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password,);
